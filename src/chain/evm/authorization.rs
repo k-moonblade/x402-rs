@@ -314,9 +314,11 @@ where
             );
 
             // Execute both calls in a single transaction simulation to accommodate for possible smart wallet creation
+            // Use "latest" block instead of "pending" since some RPC providers don't support pending tag
             let (is_valid_signature_result, transfer_result) = provider
                 .inner()
                 .multicall()
+                .block(alloy::eips::BlockId::latest())
                 .add(is_valid_signature_call)
                 .add(transfer_call.tx)
                 .aggregate3()

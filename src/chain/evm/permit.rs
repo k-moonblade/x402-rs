@@ -153,8 +153,10 @@ pub async fn verify_permit<P: Provider>(
     );
 
     // Use multicall to batch read operations (gas-free simulation)
+    // Use "latest" block instead of "pending" since BSC RPC doesn't support pending tag
     let (nonce_result, balance_result, domain_result) = provider
         .multicall()
+        .block(alloy::eips::BlockId::latest())
         .add(token.nonces(owner))
         .add(token.balanceOf(owner))
         .add(token.DOMAIN_SEPARATOR())
