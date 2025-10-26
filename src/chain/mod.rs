@@ -1,3 +1,4 @@
+use std::future::Future;
 use std::time::SystemTimeError;
 
 use crate::chain::evm::EvmProvider;
@@ -115,6 +116,9 @@ pub enum FacilitatorLocalError {
     /// EIP-712 signature is invalid or mismatched.
     #[error("Invalid signature: {1}")]
     InvalidSignature(MixedAddress, String),
+    /// Permit nonce mismatch (replay protection).
+    #[error("Invalid nonce: {1}")]
+    InvalidNonce(MixedAddress, String),
     /// The payer's on-chain balance is insufficient for the payment.
     #[error("Insufficient funds")]
     InsufficientFunds(MixedAddress),

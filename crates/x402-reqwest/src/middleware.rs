@@ -178,11 +178,26 @@ impl X402Payments {
 
     /// Selects the most preferred payment requirement based on the client's `prefer` list
     /// and network priority (Base preferred).
+    /// Only selects requirements that can be handled by available wallets.
     pub fn select_payment_requirements(
         &self,
         payment_requirements: &[PaymentRequirements],
     ) -> Result<PaymentRequirements, X402PaymentsError> {
-        let mut sorted: Vec<PaymentRequirements> = payment_requirements.to_vec();
+        // Filter to only requirements that we have a wallet for
+        let handleable: Vec<PaymentRequirements> = payment_requirements
+            .iter()
+            .filter(|req| self.wallets.iter().any(|w| w.can_handle(req)))
+            .cloned()
+            .collect();
+
+        if handleable.is_empty() {
+            return Err(X402PaymentsError::NoSuitablePaymentMethod {
+                accepts: payment_requirements.to_vec(),
+                prefer: self.prefer.clone(),
+            });
+        }
+
+        let mut sorted = handleable;
         // Assign priority score: lower is better
         // Prefer what is in self.prefer and ultimately Base
         sorted.sort_by_key(|req| {

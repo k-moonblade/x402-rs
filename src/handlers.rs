@@ -183,6 +183,7 @@ impl IntoResponse for FacilitatorLocalError {
             }
             FacilitatorLocalError::ReceiverMismatch(payer, ..)
             | FacilitatorLocalError::InvalidSignature(payer, ..)
+            | FacilitatorLocalError::InvalidNonce(payer, ..)
             | FacilitatorLocalError::InvalidTiming(payer, ..)
             | FacilitatorLocalError::InsufficientValue(payer) => {
                 (StatusCode::OK, Json(invalid_schema(Some(payer)))).into_response()

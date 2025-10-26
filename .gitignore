@@ -3,3 +3,5 @@
 .env
 crates/*/target/
 examples/*/.env
+
+node_modules

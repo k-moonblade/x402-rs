@@ -117,6 +117,8 @@ HOST=0.0.0.0
 PORT=8080
 RPC_URL_BASE_SEPOLIA=https://sepolia.base.org
 RPC_URL_BASE=https://mainnet.base.org
+RPC_URL_BSC_TESTNET=https://data-seed-prebsc-1-s1.binance.org:8545
+RPC_URL_BSC=https://bsc-dataseed.binance.org
 SIGNER_TYPE=private-key
 EVM_PRIVATE_KEY=0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef
 SOLANA_PRIVATE_KEY=6ASf5EcmmEHTgDJ4X4ZT5vT6iHVJBXPg5AN5YoTCpGWt
@@ -240,6 +242,8 @@ Available variables:
 * `RPC_URL_POLYGON_AMOY`: RPC endpoint for Polygon Amoy testnet.
 * `RPC_URL_SEI`: RPC endpoint for Sei mainnet.
 * `RPC_URL_SEI_TESTNET`: RPC endpoint for Sei testnet.
+* `RPC_URL_BSC`: RPC endpoint for BSC mainnet.
+* `RPC_URL_BSC_TESTNET`: RPC endpoint for BSC testnet.
 
 
 ### Observability
@@ -277,6 +281,8 @@ The Facilitator supports different networks based on the environment variables y
 | Polygon Mainnet           | `RPC_URL_POLYGON`        | ✅                | Mainnet                          |
 | Sei Testnet               | `RPC_URL_SEI_TESTNET`    | ✅                | Testnet                          |
 | Sei Mainnet               | `RPC_URL_SEI`            | ✅                | Mainnet                          |
+| BSC Testnet               | `RPC_URL_BSC_TESTNET`    | ✅                | Testnet                          |
+| BSC Mainnet               | `RPC_URL_BSC`            | ✅                | Mainnet                          |
 | Solana Mainnet            | `RPC_URL_SOLANA`         | ✅                | Mainnet                          |
 | Solana Devnet             | `RPC_URL_SOLANA_DEVNET`  | ✅                | Testnet, Recommended for testing |
 

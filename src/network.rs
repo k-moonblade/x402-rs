@@ -51,6 +51,12 @@ pub enum Network {
     /// Sei testnet (chain ID 1328).
     #[serde(rename = "sei-testnet")]
     SeiTestnet,
+    /// BSC testnet (chain ID 97).
+    #[serde(rename = "bsc-testnet")]
+    BscTestnet,
+    /// BSC mainnet (chain ID 56).
+    #[serde(rename = "bsc")]
+    Bsc,
 }
 
 impl Display for Network {
@@ -67,6 +73,8 @@ impl Display for Network {
             Network::Polygon => write!(f, "polygon"),
             Network::Sei => write!(f, "sei"),
             Network::SeiTestnet => write!(f, "sei-testnet"),
+            Network::BscTestnet => write!(f, "bsc-testnet"),
+            Network::Bsc => write!(f, "bsc"),
         }
     }
 }
@@ -91,6 +99,8 @@ impl From<Network> for NetworkFamily {
             Network::Polygon => NetworkFamily::Evm,
             Network::Sei => NetworkFamily::Evm,
             Network::SeiTestnet => NetworkFamily::Evm,
+            Network::BscTestnet => NetworkFamily::Evm,
+            Network::Bsc => NetworkFamily::Evm,
         }
     }
 }
@@ -99,17 +109,19 @@ impl Network {
     /// Return all known [`Network`] variants.
     pub fn variants() -> &'static [Network] {
         &[
-            Network::BaseSepolia,
-            Network::Base,
-            Network::XdcMainnet,
-            Network::AvalancheFuji,
-            Network::Avalanche,
-            Network::Solana,
-            Network::SolanaDevnet,
-            Network::PolygonAmoy,
-            Network::Polygon,
-            Network::Sei,
-            Network::SeiTestnet,
+            // Network::BaseSepolia,
+            // Network::Base,
+            // Network::XdcMainnet,
+            // Network::AvalancheFuji,
+            // Network::Avalanche,
+            // Network::Solana,
+            // Network::SolanaDevnet,
+            // Network::PolygonAmoy,
+            // Network::Polygon,
+            // Network::Sei,
+            // Network::SeiTestnet,
+            Network::BscTestnet,
+            Network::Bsc,
         ]
     }
 }
@@ -275,6 +287,37 @@ static USDC_SEI_TESTNET: Lazy<USDCDeployment> = Lazy::new(|| {
     })
 });
 
+/// Lazily initialized known USD1 deployment on BSC testnet as [`USDCDeployment`].
+/// Note: USD1 may not be deployed on testnet. This address is a placeholder.
+static USDC_BSC_TESTNET: Lazy<USDCDeployment> = Lazy::new(|| {
+    USDCDeployment(TokenDeployment {
+        asset: TokenAsset {
+            address: address!("0x64544969ed7EBf5f083679233325356EbE738930").into(),
+            network: Network::BscTestnet,
+        },
+        decimals: 18,
+        eip712: Some(TokenDeploymentEip712 {
+            name: "USDC".into(),
+            version: "1".into(),
+        }),
+    })
+});
+
+/// Lazily initialized known USD1 deployment on BSC mainnet as [`USDCDeployment`].
+static USDC_BSC: Lazy<USDCDeployment> = Lazy::new(|| {
+    USDCDeployment(TokenDeployment {
+        asset: TokenAsset {
+            address: address!("0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d").into(),
+            network: Network::Bsc,
+        },
+        decimals: 18,
+        eip712: Some(TokenDeploymentEip712 {
+            name: "USD1".into(),
+            version: "1".into(),
+        }),
+    })
+});
+
 /// A known USDC deployment as a wrapper around [`TokenDeployment`].
 #[derive(Clone, Debug)]
 pub struct USDCDeployment(pub TokenDeployment);
@@ -322,6 +365,8 @@ impl USDCDeployment {
             Network::Polygon => &USDC_POLYGON,
             Network::Sei => &USDC_SEI,
             Network::SeiTestnet => &USDC_SEI_TESTNET,
+            Network::BscTestnet => &USDC_BSC_TESTNET,
+            Network::Bsc => &USDC_BSC,
         }
     }
 }

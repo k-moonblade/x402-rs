@@ -287,7 +287,7 @@ impl Telemetry {
             None => {
                 // Fallback: just use local logging
                 tracing_subscriber::registry()
-                    .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "trace".into()))
+                    .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "debug".into()))
                     .with(tracing_subscriber::fmt::layer())
                     .init();
 

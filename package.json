@@ -1,0 +1,8 @@
+{
+	"dependencies": {
+		"viem": "^2.38.4"
+	},
+	"devDependencies": {
+		"@types/node": "^24.9.1"
+	}
+}

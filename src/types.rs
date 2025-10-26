@@ -281,10 +281,41 @@ pub struct ExactSolanaPayload {
     pub transaction: String,
 }
 
+/// EIP-2612 permit-based payment payload.
+/// Contains the permit signature and parameters for batched permit + transferFrom.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExactEvmPermitPayload {
+    /// Token owner who is granting the permit
+    pub owner: EvmAddress,
+
+    /// Spender being approved (facilitator address)
+    pub spender: EvmAddress,
+
+    /// Amount to approve and transfer
+    pub value: TokenAmount,
+
+    /// Nonce for replay protection (from token.nonces(owner))
+    pub nonce: U256,
+
+    /// Deadline timestamp (unix seconds)
+    pub deadline: UnixTimestamp,
+
+    /// EIP-712 signature (v, r, s packed)
+    pub signature: EvmSignature,
+
+    /// Token contract address
+    pub token: EvmAddress,
+
+    /// Final recipient of the transfer (payee)
+    pub to: EvmAddress,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ExactPaymentPayload {
     Evm(ExactEvmPayload),
+    EvmPermit(ExactEvmPermitPayload),
     Solana(ExactSolanaPayload),
 }
 
@@ -1435,5 +1466,22 @@ sol!(
         uint256 validAfter;
         uint256 validBefore;
         bytes32 nonce;
+    }
+
+    /// Solidity-compatible struct definition for EIP-2612 `permit`.
+    ///
+    /// This matches the EIP-2612 format used in EIP-712 typed data:
+    /// it defines the authorization for `spender` to spend `value` tokens
+    /// from `owner`, valid until `deadline`, identified by unique `nonce`.
+    ///
+    /// This struct is used to reconstruct the EIP-712 digest when verifying
+    /// a permit signature for gasless token approvals.
+    #[derive(Serialize, Deserialize)]
+    struct Permit {
+        address owner;
+        address spender;
+        uint256 value;
+        uint256 nonce;
+        uint256 deadline;
     }
 );
