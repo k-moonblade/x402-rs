@@ -813,6 +813,7 @@ impl NonceManager for PendingNonceManager {
             // Initialize the nonce if we haven't seen this account before.
             tracing::trace!(%address, "fetching nonce");
             // Try pending first (includes mempool), fallback to latest if not supported
+            // Note: Some RPC providers (like BSC) don't support the pending tag
             let pending_result = provider.get_transaction_count(address).pending().await;
             match pending_result {
                 Ok(n) => {
@@ -820,8 +821,15 @@ impl NonceManager for PendingNonceManager {
                     n
                 }
                 Err(e) => {
-                    tracing::debug!(%address, error = %e, "pending not supported, using latest");
-                    provider.get_transaction_count(address).await?
+                    // Convert to string to check for "Unsupported pending tag" or similar errors
+                    let error_str = format!("{:?}", e);
+                    if error_str.contains("pending") || error_str.contains("Unsupported") {
+                        tracing::debug!(%address, error = %e, "pending tag not supported, using latest block");
+                    } else {
+                        tracing::debug!(%address, error = %e, "failed to get pending nonce, using latest");
+                    }
+                    // Explicitly use latest block to avoid defaulting to pending
+                    provider.get_transaction_count(address).latest().await?
                 }
             }
         } else {
