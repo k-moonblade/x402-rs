@@ -8924,6 +8924,7 @@ dependencies = [
 name = "x402-axum-example"
 version = "0.1.0"
 dependencies = [
+ "alloy",
  "axum",
  "dotenvy",
  "opentelemetry",
@@ -8994,6 +8995,7 @@ dependencies = [
  "opentelemetry-stdout",
  "opentelemetry_sdk",
  "regex",
+ "reqwest",
  "rust_decimal",
  "serde",
  "serde_json",

@@ -276,8 +276,8 @@ impl SenderWallet for EvmSenderWallet {
     ) -> Result<PaymentPayload, X402PaymentsError> {
         let network = selected.network;
 
-        // BSC networks require permit-based payments
-        let use_permit = matches!(network, Network::Bsc | Network::BscTestnet);
+        // BSC network requires permit-based payments
+        let use_permit = matches!(network, Network::Bsc);
 
         if use_permit {
             self.create_permit_payload(selected).await

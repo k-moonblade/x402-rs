@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
  * Self-contained script to deploy EIP-6492 Universal Signature Validator
- * to BSC Mainnet and BSC Testnet at address 0xdAcD51A54883eb67D95FAEb2BBfdC4a9a6BD2a3B
+ * to BSC Mainnet at address 0xdAcD51A54883eb67D95FAEb2BBfdC4a9a6BD2a3B
  *
  * Usage:
  *   npm install viem
- *   npx tsx scripts/deploy-validator.ts <mainnet|testnet|both> <private-key>
+ *   npx tsx scripts/deploy-validator.ts <private-key>
  *
  * Or with environment variable:
- *   PRIVATE_KEY=0x... npx tsx scripts/deploy-validator.ts both
+ *   PRIVATE_KEY=0x... npx tsx scripts/deploy-validator.ts
  */
 
 import {
@@ -20,7 +20,7 @@ import {
   type Chain,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { bsc, bscTestnet } from 'viem/chains';
+import { bsc } from 'viem/chains';
 
 // EIP-2470 Singleton Factory address (same across all EVM chains)
 const SINGLETON_FACTORY: Address = '0xce0042B868300000d44A59004Da54A005ffdcf9f';
@@ -61,10 +61,6 @@ const NETWORKS: Record<string, DeploymentConfig> = {
   mainnet: {
     chain: bsc,
     rpcUrl: process.env.BSC_RPC_URL || 'https://bsc-mainnet.infura.io/v3/6520fe0dc61c41df8f87fc20d8593486',
-  },
-  testnet: {
-    chain: bscTestnet,
-    rpcUrl: process.env.BSC_TESTNET_RPC_URL || 'https://bsc-testnet.infura.io/v3/6520fe0dc61c41df8f87fc20d8593486',
   },
 };
 
@@ -188,30 +184,26 @@ async function deployToNetwork(
 async function main() {
   const args = process.argv.slice(2);
 
-  if (args.length < 1) {
+  if (args.length < 0) {
     console.log(`
-Usage: npx tsx scripts/deploy-validator.ts <mainnet|testnet|both> [private-key]
+Usage: npx tsx scripts/deploy-validator.ts [private-key]
 
 Arguments:
-  mainnet|testnet|both  - Which network(s) to deploy to
   private-key           - Your private key (with 0x prefix)
                          Can also be set via PRIVATE_KEY env var
 
 Environment variables:
   PRIVATE_KEY           - Your private key (alternative to CLI arg)
   BSC_RPC_URL          - Custom BSC mainnet RPC URL
-  BSC_TESTNET_RPC_URL  - Custom BSC testnet RPC URL
 
 Examples:
-  PRIVATE_KEY=0x... npx tsx scripts/deploy-validator.ts testnet
-  npx tsx scripts/deploy-validator.ts both 0x1234...
-  npx tsx scripts/deploy-validator.ts mainnet 0x1234...
+  PRIVATE_KEY=0x... npx tsx scripts/deploy-validator.ts
+  npx tsx scripts/deploy-validator.ts 0x1234...
 `);
     process.exit(1);
   }
 
-  const network = args[0];
-  const privateKey = (args[1] || process.env.PRIVATE_KEY) as Hex;
+  const privateKey = (args[0] || process.env.PRIVATE_KEY) as Hex;
 
   if (!privateKey || !privateKey.startsWith('0x')) {
     console.error('❌ Error: Private key must be provided and start with 0x');
@@ -223,37 +215,17 @@ Examples:
   console.log(`  Singleton Factory: ${SINGLETON_FACTORY}`);
   console.log(`  Target Address: ${EXPECTED_ADDRESS}`);
 
-  const results: boolean[] = [];
-
-  switch (network) {
-    case 'mainnet':
-      results.push(await deployToNetwork('BSC Mainnet', NETWORKS.mainnet, privateKey));
-      break;
-    case 'testnet':
-      results.push(await deployToNetwork('BSC Testnet', NETWORKS.testnet, privateKey));
-      break;
-    case 'both':
-      results.push(await deployToNetwork('BSC Testnet', NETWORKS.testnet, privateKey));
-      results.push(await deployToNetwork('BSC Mainnet', NETWORKS.mainnet, privateKey));
-      break;
-    default:
-      console.error(`❌ Error: Invalid network option '${network}'`);
-      console.error('Valid options: mainnet, testnet, both');
-      process.exit(1);
-  }
+  const success = await deployToNetwork('BSC Mainnet', NETWORKS.mainnet, privateKey);
 
   console.log(`\n${'='.repeat(60)}`);
   console.log('📊 Deployment Summary');
   console.log(`${'='.repeat(60)}`);
 
-  const successCount = results.filter(r => r).length;
-  const totalCount = results.length;
-
-  if (successCount === totalCount) {
-    console.log(`✅ All deployments successful (${successCount}/${totalCount})`);
+  if (success) {
+    console.log(`✅ Deployment successful`);
     process.exit(0);
   } else {
-    console.log(`⚠️  Some deployments failed (${successCount}/${totalCount} successful)`);
+    console.log(`⚠️  Deployment failed`);
     process.exit(1);
   }
 }

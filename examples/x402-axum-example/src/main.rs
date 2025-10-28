@@ -1,3 +1,4 @@
+use alloy::primitives::Address;
 use axum::Router;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -11,7 +12,6 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 use x402_axum::{IntoPriceTag, X402Middleware};
 use x402_rs::network::{Network, USDCDeployment};
 use x402_rs::telemetry::Telemetry;
-use x402_rs::{address_evm, address_sol};
 
 #[tokio::main]
 async fn main() {
@@ -25,24 +25,36 @@ async fn main() {
     let facilitator_url =
         env::var("FACILITATOR_URL").unwrap_or_else(|_| "https://facilitator.x402.rs".to_string());
 
+    let port = env::var("PORT")
+        .ok()
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or(3000);
+
+    let base_url = env::var("BASE_URL")
+        .unwrap_or_else(|_| format!("http://localhost:{}/", port));
+
     let x402 = X402Middleware::try_from(facilitator_url)
         .unwrap()
-        .with_base_url(url::Url::parse("https://localhost:3000/").unwrap());
-    let usdc_bsc = USDCDeployment::by_network(Network::Bsc)
-        .pay_to(address_evm!("0xfBBc5DfB633d1e010919C4F4D70A4c00940C8171"));
-    let usdc_solana = USDCDeployment::by_network(Network::Solana)
-        .pay_to(address_sol!("EGBQqKn968sVv5cQh5Cr72pSTHfxsuzq7o7asqYB5uEV"));
+        .with_base_url(url::Url::parse(&base_url).unwrap());
+
+    // Configure receiver address (supports both env var names for compatibility)
+    let receiver_address = env::var("BASE_SEPOLIA_RECEIVER")
+        .or_else(|_| env::var("RECEIVER_ADDRESS"))
+        .unwrap_or_else(|_| "0xfBBc5DfB633d1e010919C4F4D70A4c00940C8171".to_string());
+
+    // Use Base Sepolia USDC by default
+    let usdc_base_sepolia = USDCDeployment::by_network(Network::BaseSepolia)
+        .pay_to(receiver_address.parse::<Address>().unwrap())
+        .amount(0.0025)
+        .unwrap();
+
+    let x402_layer = x402
+        .with_description("Premium API")
+        .with_mime_type("application/json")
+        .with_price_tag(usdc_base_sepolia);
 
     let app = Router::new()
-        .route(
-            "/protected-route",
-            get(my_handler).layer(
-                x402.with_description("Premium API")
-                    .with_mime_type("application/json")
-                    .with_price_tag(usdc_solana.amount(0.0025).unwrap())
-                    .or_price_tag(usdc_bsc.amount(0.0025).unwrap()),
-            ),
-        )
+        .route("/protected-route", get(my_handler).layer(x402_layer))
         .layer(
             // Usual HTTP tracing
             TraceLayer::new_for_http()
@@ -93,7 +105,8 @@ async fn main() {
 
     tracing::info!("Using facilitator on {}", x402.facilitator_url());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .expect("Can not start server");
     tracing::info!("Listening on {}", listener.local_addr().unwrap());
